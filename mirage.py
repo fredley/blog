@@ -54,7 +54,7 @@ def load_posts(directory, mode="post"):
     with open(post_filename) as post_file:
       split_filename = os.path.splitext(filename)
       if len(split_filename) == 2 and split_filename[1] == ".md":
-        if split_filename[1].endswith("_draft"):
+        if split_filename[0].lower().endswith("_draft"):
           cnsl.warn("Skipping draft file {}".format(filename))
           continue
         cnsl.ok("Compiling {} {}".format(mode, filename))
@@ -315,8 +315,8 @@ def watch():
 
 def deploy():
   """
-  Deploy your site to a cloud service. 
-  You must have specified a service provider, container name, 
+  Deploy your site to a cloud service.
+  You must have specified a service provider, container name,
   and access credentials in config.yml,
   """
   compile()
@@ -337,7 +337,12 @@ def deploy():
     return
 
   try:
-    driver = CloudFiles(
+    if "aws-region" in config["deploy"]:
+      cnsl.ok("Connecting to region {}".format(config["deploy"]["aws-region"]))
+      driver = CloudFiles(
+        config["deploy"]["access-key"], config["deploy"]["secret-key"], region=config["deploy"]["aws-region"])
+    else:
+      driver =  CloudFiles(
         config["deploy"]["access-key"], config["deploy"]["secret-key"])
   except Exception as e:
     cnsl.error("Could not connect to storage service because: {}".format(e))
